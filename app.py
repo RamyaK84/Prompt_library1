@@ -10,6 +10,7 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
     bcrypt.init_app(app)
+    
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = 'info'
 
@@ -19,6 +20,7 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
 
+    # Blueprint Registrations
     from routes.auth_routes import auth_bp
     from routes.prompt_routes import prompt_bp
     from routes.search_routes import search_bp
@@ -60,6 +62,11 @@ def seed_demo_users():
         db.session.add(student)
     db.session.commit()
 
+# --- CRITICAL FOR DEPLOYMENT ---
+# Create the app object at the top level for Gunicorn
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Use the PORT environment variable if available (for Render)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
