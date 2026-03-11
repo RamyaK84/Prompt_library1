@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard – PromptLib{% endblock %}
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title" data-i18n="admin">👑 Admin Dashboard</h1>
+    <p>Manage prompts, users, reviews, and view analytics</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <!-- Stats Row -->
+    <div class="admin-stats">
+      <div class="admin-stat-card"><div class="asc-icon">📋</div><div class="asc-num">{{ prompts|length }}</div><div class="asc-label">Total Prompts</div></div>
+      <div class="admin-stat-card"><div class="asc-icon">👥</div><div class="asc-num">{{ users|length }}</div><div class="asc-label">Users</div></div>
+      <div class="admin-stat-card"><div class="asc-icon">📝</div><div class="asc-num">{{ reviews|length }}</div><div class="asc-label">Reviews</div></div>
+      <div class="admin-stat-card"><div class="asc-icon">📊</div><div class="asc-num">{{ analytics.values()|sum }}</div><div class="asc-label">Total Uses</div></div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="admin-section">
+      <h2>👥 Registered Users</h2>
+      <div class="table-wrapper">
+        <table class="admin-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>College</th><th>Joined</th></tr></thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td>{{ u.name }}</td><td>{{ u.email }}</td>
+              <td><span class="role-badge role-{{ u.role }}">{{ u.role }}</span></td>
+              <td>{{ u.department or '—' }}</td><td>{{ u.college or '—' }}</td>
+              <td>{{ u.created_at.strftime('%b %d, %Y') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Usage Analytics -->
+    <div class="admin-section">
+      <h2>📊 Prompt Usage Analytics</h2>
+      <div class="analytics-grid">
+        {% for pid, count in analytics.items() %}
+          {% if prompt_map.get(pid) %}
+          <div class="analytics-card">
+            <div class="analytics-title">{{ prompt_map[pid] }}</div>
+            <div class="analytics-bar-wrap">
+              <div class="analytics-bar" style="width: {{ [count * 10, 100]|min }}%"></div>
+            </div>
+            <div class="analytics-count">{{ count }} uses</div>
+          </div>
+          {% endif %}
+        {% endfor %}
+        {% if not analytics %}<p class="empty-msg">No usage data yet.</p>{% endif %}
+      </div>
+    </div>
+
+    <!-- Reviews Moderation -->
+    <div class="admin-section">
+      <h2>📝 Recent Reviews</h2>
+      <div class="table-wrapper">
+        <table class="admin-table">
+          <thead><tr><th>User</th><th>Prompt</th><th>Review</th><th>Date</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for r in reviews %}
+            <tr>
+              <td>{{ user_map.get(r.user_id, 'User') }}</td>
+              <td>{{ prompt_map.get(r.prompt_id, 'Prompt #' ~ r.prompt_id) }}</td>
+              <td>{{ r.content[:80] }}{% if r.content|length > 80 %}...{% endif %}</td>
+              <td>{{ r.created_at.strftime('%b %d, %Y') }}</td>
+              <td>
+                <form method="POST" action="{{ url_for('admin.delete_review', review_id=r.id) }}" onsubmit="return confirm('Delete this review?')">
+                  <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+            {% if not reviews %}<tr><td colspan="5" class="empty-msg">No reviews yet.</td></tr>{% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- All Prompts -->
+    <div class="admin-section">
+      <h2>📋 All Prompts in Library</h2>
+      <div class="table-wrapper">
+        <table class="admin-table">
+          <thead><tr><th>ID</th><th>Title</th><th>Category</th><th>Role</th><th>Rating</th><th>Uses</th></tr></thead>
+          <tbody>
+            {% for p in prompts %}
+            <tr>
+              <td>#{{ p.id }}</td>
+              <td><a href="{{ url_for('prompt.prompt_detail', prompt_id=p.id) }}">{{ p.title }}</a></td>
+              <td>{{ p.category }}</td>
+              <td>{{ p.role|capitalize }}</td>
+              <td>⭐ {{ p.rating }}</td>
+              <td>{{ analytics.get(p.id, 0) }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Signup – PromptLib{% endblock %}
+{% block content %}
+<section class="auth-section">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-logo">✦ PromptLib</div>
+      <h1 class="auth-title" data-i18n="create_account">Create Account</h1>
+      <p class="auth-sub" data-i18n="join_text">Join thousands of students and professionals.</p>
+      <form method="POST" class="auth-form">
+        <div class="form-group">
+          <label data-i18n="full_name">Full Name</label>
+          <input type="text" name="name" required placeholder="Your Name" class="form-input"/>
+        </div>
+        <div class="form-group">
+          <label data-i18n="email_label">Email Address</label>
+          <input type="email" name="email" required placeholder="you@email.com" class="form-input"/>
+        </div>
+        <div class="form-group">
+          <label data-i18n="password_label">Password</label>
+          <div class="input-password">
+            <input type="password" name="password" id="signupPwd" required placeholder="Min 6 characters" class="form-input"/>
+            <button type="button" onclick="togglePwd('signupPwd')" class="pwd-toggle">👁</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label data-i18n="account_type">Account Type</label>
+          <select name="role" class="form-input form-select">
+            <option value="user"  data-i18n="role_student">👨‍🎓 Student / Professional</option>
+            <option value="owner">👑 Owner / Admin</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg" data-i18n="create_account">Create Account</button>
+      </form>
+      <p class="auth-footer">
+        <span data-i18n="already_account">Already have an account?</span>
+        <a href="{{ url_for('auth.login') }}" data-i18n="login">Login</a>
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>function togglePwd(id) { const i = document.getElementById(id); i.type = i.type === 'password' ? 'text' : 'password'; }</script>
+{% endblock %}

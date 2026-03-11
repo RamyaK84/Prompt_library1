@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Favourites – PromptLib{% endblock %}
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title" data-i18n="my_favourites">My Favourites</h1>
+    <p>{{ prompts|length }} <span data-i18n="saved_prompts">saved prompts</span></p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    {% if prompts %}
+      <div class="prompts-grid">
+        {% for prompt in prompts %}
+        <div class="prompt-card" id="favcard-{{ prompt.id }}">
+          <div class="prompt-card-header">
+            <span class="prompt-category-badge">{{ prompt.subcategory }}</span>
+            <button class="fav-btn fav-active" onclick="removeFavAndHide({{ prompt.id }}, this)">❤️</button>
+          </div>
+          <h3 class="prompt-title">{{ prompt.title }}</h3>
+          <p class="prompt-preview">{{ prompt.preview }}</p>
+          <div class="prompt-meta">
+            <span class="prompt-cat-tag">{{ prompt.category }}</span>
+            <span class="prompt-rating">⭐ {{ prompt.rating }}</span>
+          </div>
+          <div class="prompt-actions">
+            <a href="{{ url_for('prompt.prompt_detail', prompt_id=prompt.id) }}" class="btn btn-sm btn-outline" data-i18n="view_btn">View</a>
+            <button class="btn btn-sm btn-primary" onclick="copyPrompt({{ prompt.id }}, `{{ prompt.template|replace('`','\\`') }}`)">
+              <i class="fa fa-copy"></i> <span data-i18n="copy_btn">Copy</span>
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🤍</div>
+        <h3 data-i18n="no_favs">No favourites yet</h3>
+        <p data-i18n="no_favs_sub">Browse prompts and click the heart icon to save your favourites here.</p>
+        <a href="{{ url_for('prompt.prompts') }}" class="btn btn-primary" data-i18n="explore_btn">Explore Prompts</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+function removeFavAndHide(promptId, btn) {
+  fetch('/api/favourite', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({prompt_id: promptId}) })
+    .then(r => r.json()).then(d => {
+      if (d.status === 'removed') {
+        document.getElementById('favcard-' + promptId).style.display = 'none';
+        showToast('Removed from favourites');
+      }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+{% block title %}Prompt Generator – PromptLib{% endblock %}
+{% block content %}
+
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">✨ Prompt Generator</h1>
+    <p>Generate a custom AI prompt — using our library OR powered by Gemini AI</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+
+    <!-- MODE TABS -->
+    <div class="gen-mode-tabs">
+      <button class="gen-tab active" id="tabLibrary" onclick="switchTab('library')">
+        📚 From Library
+        <span class="tab-desc">Match from 25 curated prompts</span>
+      </button>
+      <button class="gen-tab" id="tabAI" onclick="switchTab('ai')">
+        🤖 AI Generator
+        <span class="tab-desc">Generate with Gemini AI</span>
+      </button>
+    </div>
+
+    <!-- ===== TAB 1: LIBRARY MATCH ===== -->
+    <div id="panelLibrary" class="gen-panel">
+      <div class="generator-layout">
+        <div class="generator-form-card">
+          <h3>📚 Find Best Match from Library</h3>
+          <p class="form-hint">Describe your need — we'll find the most relevant prompt from our curated collection.</p>
+          <form method="POST" class="auth-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Role</label>
+                <select name="role" class="form-input form-select">
+                  <option value="student">👨‍🎓 Student</option>
+                  <option value="hr">💼 HR / Professional</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select name="category" class="form-input form-select">
+                  {% for sub, cats in categories.items() %}
+                    <optgroup label="{{ sub }}">
+                      {% for cat in cats %}<option>{{ cat }}</option>{% endfor %}
+                    </optgroup>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Describe What You Need</label>
+              <textarea name="description" rows="3" class="form-input"
+                placeholder="e.g. I need a leave letter to my professor for a medical emergency"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg">🔍 Find Best Match</button>
+          </form>
+        </div>
+
+        {% if result %}
+        <div class="generator-result">
+          <div class="result-header">
+            <div>
+              <div class="result-source-badge">📚 From Library</div>
+              <h3>{{ result.title }}</h3>
+            </div>
+            <span class="prompt-category-badge">{{ result.category }}</span>
+          </div>
+          <div class="prompt-block" id="libraryPrompt">{{ result.template }}</div>
+          <div class="result-actions">
+            <button class="btn btn-primary" onclick="copyBlock('libraryPrompt')">
+              <i class="fa fa-copy"></i> Copy Prompt
+            </button>
+            <a href="{{ url_for('prompt.prompt_detail', prompt_id=result.id) }}" class="btn btn-outline">
+              View Full Details
+            </a>
+          </div>
+          {% if not current_user.is_authenticated %}
+            <div class="auth-notice">
+              💡 <a href="{{ url_for('auth.login') }}">Login</a> to auto-fill your name, department, year &amp; college!
+            </div>
+          {% else %}
+            <div class="personalized-notice">✅ Personalized with your profile data!</div>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ===== TAB 2: AI GENERATOR ===== -->
+    <div id="panelAI" class="gen-panel" style="display:none">
+      <div class="generator-layout">
+        <div class="generator-form-card">
+          <h3>🤖 Generate with Gemini AI</h3>
+          <p class="form-hint">Uses Google Gemini to create a fully custom prompt based on your description.</p>
+
+          <!-- API KEY INPUT -->
+          <div class="api-key-section">
+            <div class="form-group">
+              <label>🔑 Gemini API Key</label>
+              <div class="input-password">
+                <input type="password" id="geminiApiKey" class="form-input"
+                       placeholder="Paste your Gemini API key here..."/>
+                <button type="button" onclick="togglePwd('geminiApiKey')" class="pwd-toggle">👁</button>
+              </div>
+              <div class="api-key-help">
+                Don't have a key?
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="api-link">
+                  Get free Gemini API key →
+                </a>
+                <span class="free-badge">FREE</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- FORM -->
+          <div class="form-row">
+            <div class="form-group">
+              <label>Role</label>
+              <select id="aiRole" class="form-input form-select">
+                <option value="student">👨‍🎓 Student</option>
+                <option value="hr">💼 HR / Professional</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Category</label>
+              <select id="aiCategory" class="form-input form-select">
+                {% for sub, cats in categories.items() %}
+                  <optgroup label="{{ sub }}">
+                    {% for cat in cats %}<option>{{ cat }}</option>{% endfor %}
+                  </optgroup>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Describe What You Need</label>
+            <textarea id="aiDescription" rows="4" class="form-input"
+              placeholder="e.g. Write me a professional email to apply for a software engineering internship at a tech company. I want to highlight my Python skills and college projects."></textarea>
+          </div>
+
+          {% if current_user.is_authenticated %}
+          <div class="profile-autofill-notice">
+            ✅ Your profile will be used: <strong>{{ current_user.name }}</strong>
+            {% if current_user.department %} · {{ current_user.department }}{% endif %}
+            {% if current_user.college %} · {{ current_user.college }}{% endif %}
+          </div>
+          {% else %}
+          <div class="auth-notice">
+            💡 <a href="{{ url_for('auth.login') }}">Login</a> to auto-include your name, department & college in the generated prompt.
+          </div>
+          {% endif %}
+
+          <button class="btn btn-primary btn-lg" onclick="generateWithAI()" id="generateBtn">
+            <i class="fa fa-magic"></i> Generate with Gemini AI
+          </button>
+        </div>
+
+        <!-- AI RESULT BOX -->
+        <div class="generator-result" id="aiResultBox" style="display:none">
+          <div class="result-header">
+            <div>
+              <div class="result-source-badge ai-badge">🤖 AI Generated</div>
+              <h3>Your Custom Prompt</h3>
+            </div>
+            <span class="prompt-category-badge" id="aiResultCategory">AI</span>
+          </div>
+          <div class="prompt-block" id="aiGeneratedPrompt" contenteditable="true"
+               style="min-height:200px; outline:none;"
+               title="Click to edit this prompt"></div>
+          <div class="edit-hint">✏️ Click the prompt above to edit it before copying</div>
+          <div class="result-actions">
+            <button class="btn btn-primary" onclick="copyBlock('aiGeneratedPrompt')">
+              <i class="fa fa-copy"></i> Copy Prompt
+            </button>
+            <button class="btn btn-outline" onclick="generateWithAI()">
+              <i class="fa fa-refresh"></i> Regenerate
+            </button>
+          </div>
+        </div>
+
+        <!-- LOADING STATE -->
+        <div class="ai-loading" id="aiLoading" style="display:none">
+          <div class="loading-spinner"></div>
+          <p>Generating your custom prompt with Gemini AI...</p>
+        </div>
+
+        <!-- ERROR STATE -->
+        <div class="ai-error" id="aiError" style="display:none">
+          <div class="error-icon">❌</div>
+          <h3>Generation Failed</h3>
+          <p id="aiErrorMsg"></p>
+          <div class="error-help">
+            <strong>Common fixes:</strong>
+            <ul>
+              <li>Make sure your API key is correct</li>
+              <li>Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a></li>
+              <li>Check your internet connection</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Tab switching
+function switchTab(tab) {
+  document.getElementById('panelLibrary').style.display = tab === 'library' ? '' : 'none';
+  document.getElementById('panelAI').style.display      = tab === 'ai'      ? '' : 'none';
+  document.getElementById('tabLibrary').classList.toggle('active', tab === 'library');
+  document.getElementById('tabAI').classList.toggle('active',      tab === 'ai');
+}
+
+// Show AI tab if came from AI generation
+{% if not result %}
+  // default to library tab
+{% endif %}
+
+function togglePwd(id) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function copyBlock(id) {
+  const text = document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text)
+    .then(() => showToast('✓ Prompt copied to clipboard!'))
+    .catch(() => showToast('Copy failed — try Ctrl+A then Ctrl+C'));
+}
+
+function generateWithAI() {
+  const apiKey = document.getElementById('geminiApiKey').value.trim();
+  const role = document.getElementById('aiRole').value;
+  const category = document.getElementById('aiCategory').value;
+  const description = document.getElementById('aiDescription').value.trim();
+
+  // Validation
+  if (!apiKey) {
+    showToast('⚠️ Please enter your Gemini API key first!'); return;
+  }
+  if (!description) {
+    showToast('⚠️ Please describe what you need!'); return;
+  }
+
+  // Save API key in session storage for convenience
+  sessionStorage.setItem('gemini_api_key', apiKey);
+
+  // Show loading
+  document.getElementById('aiResultBox').style.display = 'none';
+  document.getElementById('aiError').style.display = 'none';
+  document.getElementById('aiLoading').style.display = 'flex';
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('generateBtn').innerHTML = '<i class="fa fa-spinner fa-spin"></i> Generating...';
+
+  fetch('/api/ai-generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_key: apiKey, role, category, description })
+  })
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('aiLoading').style.display = 'none';
+    document.getElementById('generateBtn').disabled = false;
+    document.getElementById('generateBtn').innerHTML = '<i class="fa fa-magic"></i> Generate with Gemini AI';
+
+    if (data.success) {
+      document.getElementById('aiGeneratedPrompt').innerText = data.prompt;
+      document.getElementById('aiResultCategory').textContent = category;
+      document.getElementById('aiResultBox').style.display = '';
+      showToast('✅ Prompt generated successfully!');
+      // Scroll to result
+      document.getElementById('aiResultBox').scrollIntoView({ behavior: 'smooth' });
+    } else {
+      document.getElementById('aiErrorMsg').textContent = data.error;
+      document.getElementById('aiError').style.display = '';
+    }
+  })
+  .catch(err => {
+    document.getElementById('aiLoading').style.display = 'none';
+    document.getElementById('generateBtn').disabled = false;
+    document.getElementById('generateBtn').innerHTML = '<i class="fa fa-magic"></i> Generate with Gemini AI';
+    document.getElementById('aiErrorMsg').textContent = 'Network error: ' + err.message;
+    document.getElementById('aiError').style.display = '';
+  });
+}
+
+// Restore saved API key
+window.addEventListener('load', function() {
+  const saved = sessionStorage.getItem('gemini_api_key');
+  if (saved) document.getElementById('geminiApiKey').value = saved;
+});
+</script>
+{% endblock %}

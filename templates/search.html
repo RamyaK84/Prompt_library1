@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Search – PromptLib{% endblock %}
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title" data-i18n="search_prompts">Search Prompts</h1>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="search-container">
+      <div class="search-mode-tabs">
+        <button class="tab-btn {% if mode=='keyword' %}active{% endif %}" onclick="setMode('keyword')" data-i18n="keyword_search">🔤 Keyword Search</button>
+        <button class="tab-btn {% if mode=='smart' %}active{% endif %}"   onclick="setMode('smart')"   data-i18n="smart_search">🧠 Smart Finder</button>
+      </div>
+      <div class="search-form">
+        <div class="search-bar-main">
+          <i class="fa fa-search"></i>
+          <input type="text" id="searchQuery" value="{{ query }}"
+                 data-i18n-placeholder="hero_search_placeholder"
+                 placeholder="Search by keyword, category, or tag..."
+                 class="main-search-input"
+                 onkeypress="if(event.key==='Enter')doSearch()"/>
+          <button class="btn btn-primary" onclick="doSearch()" data-i18n="search_btn">Search</button>
+        </div>
+        <input type="hidden" id="searchMode" value="{{ mode }}"/>
+      </div>
+      {% if mode == 'smart' %}
+      <div class="smart-hint">
+        💡 Try:
+        <span class="hint-chip" onclick="setQuery('email asking professor for leave')">email asking professor for leave</span>
+        <span class="hint-chip" onclick="setQuery('help me write a resume')">help me write a resume</span>
+        <span class="hint-chip" onclick="setQuery('prepare for job interview')">prepare for job interview</span>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if query %}
+    <div class="search-results-header">
+      <h2>{{ results|length }} <span data-i18n="results_found">results for</span> "<em>{{ query }}</em>"</h2>
+      <span class="mode-tag">{{ 'Smart Search' if mode == 'smart' else 'Keyword Search' }}</span>
+    </div>
+
+    {% if results %}
+    <div class="prompts-grid">
+      {% for prompt in results %}
+      <div class="prompt-card">
+        <div class="prompt-card-header">
+          <span class="prompt-category-badge">{{ prompt.subcategory }}</span>
+          {% if prompt.get('similarity') %}
+            <span class="similarity-badge">{{ (prompt.similarity * 100)|int }}% match</span>
+          {% endif %}
+        </div>
+        <h3 class="prompt-title">{{ prompt.title }}</h3>
+        <p class="prompt-preview">{{ prompt.preview }}</p>
+        <div class="prompt-tags">
+          {% for tag in prompt.tags[:3] %}<span class="tag">#{{ tag }}</span>{% endfor %}
+        </div>
+        <div class="prompt-meta">
+          <span class="prompt-cat-tag">{{ prompt.category }}</span>
+          <span class="prompt-rating">⭐ {{ prompt.rating }}</span>
+        </div>
+        <div class="prompt-actions">
+          <a href="{{ url_for('prompt.prompt_detail', prompt_id=prompt.id) }}" class="btn btn-sm btn-outline" data-i18n="view_btn">View</a>
+          <button class="btn btn-sm btn-primary" onclick="copyPrompt({{ prompt.id }}, `{{ prompt.template|replace('`','\\`') }}`)">
+            <i class="fa fa-copy"></i> <span data-i18n="copy_btn">Copy</span>
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3 data-i18n="no_results">No prompts found</h3>
+      <p data-i18n="no_results_sub">Try different keywords or switch to Smart Finder mode.</p>
+      <button class="btn btn-primary" onclick="setMode('smart');doSearch()" data-i18n="try_smart">Try Smart Search</button>
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+function doSearch() {
+  const q = document.getElementById('searchQuery').value;
+  const mode = document.getElementById('searchMode').value;
+  if (q) window.location.href = `/search?q=${encodeURIComponent(q)}&mode=${mode}`;
+}
+function setMode(m) {
+  document.getElementById('searchMode').value = m;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+function setQuery(q) { document.getElementById('searchQuery').value = q; }
+</script>
+{% endblock %}

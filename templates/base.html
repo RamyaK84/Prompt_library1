@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Student & HR Prompt Library{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('prompt.index') }}" class="nav-brand">
+      <span class="brand-icon">✦</span>
+      <span class="brand-text">PromptLib</span>
+    </a>
+    <div class="nav-links">
+      <a href="{{ url_for('prompt.index') }}"         class="nav-link" data-i18n="home">Home</a>
+      <a href="{{ url_for('categories.categories') }}" class="nav-link" data-i18n="categories">Categories</a>
+      <a href="{{ url_for('search.search') }}"         class="nav-link" data-i18n="search">Search</a>
+      <a href="{{ url_for('prompt.prompts') }}"        class="nav-link" data-i18n="explore">Explore Prompts</a>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('favourite.favourites') }}" class="nav-link" data-i18n="favourites">Favourites</a>
+        <a href="{{ url_for('prompt.personalize') }}"   class="nav-link" data-i18n="generator">Generator</a>
+        {% if current_user.is_owner %}
+          <a href="{{ url_for('admin.dashboard') }}" class="nav-link nav-admin" data-i18n="admin">Admin Dashboard</a>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <div class="nav-actions">
+
+      <!-- 🌐 LANGUAGE SWITCHER -->
+      <div class="lang-switcher">
+        <button class="lang-btn" id="langBtn" title="Switch Language">
+          🌐 <span id="currentLang">EN</span> <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="lang-dropdown" id="langDropdown">
+          <div class="lang-option active" data-lang="en">🇬🇧 &nbsp;English</div>
+          <div class="lang-option" data-lang="ta">🇮🇳 &nbsp;தமிழ் (Tamil)</div>
+        </div>
+      </div>
+
+      {% if current_user.is_authenticated %}
+        <div class="user-menu">
+          <button class="user-btn" id="userBtn">
+            <span class="user-avatar">{{ current_user.name[0].upper() }}</span>
+            <span>{{ current_user.name.split()[0] }}</span>
+            <i class="fa fa-caret-down"></i>
+          </button>
+          <div class="user-dropdown" id="userDropdown">
+            <a href="{{ url_for('profile.profile') }}"  data-i18n="profile"><i class="fa fa-user"></i> <span data-i18n="profile">Profile</span></a>
+            <a href="{{ url_for('auth.logout') }}"       data-i18n="logout"><i class="fa fa-sign-out-alt"></i> <span data-i18n="logout">Logout</span></a>
+          </div>
+        </div>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}"  class="btn btn-outline" data-i18n="login">Login</a>
+        <a href="{{ url_for('auth.signup') }}" class="btn btn-primary" data-i18n="signup">Sign Up</a>
+      {% endif %}
+    </div>
+
+    <button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa fa-bars"></i></button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="{{ url_for('prompt.index') }}"          class="mobile-link" data-i18n="home">Home</a>
+    <a href="{{ url_for('categories.categories') }}" class="mobile-link" data-i18n="categories">Categories</a>
+    <a href="{{ url_for('search.search') }}"          class="mobile-link" data-i18n="search">Search</a>
+    <a href="{{ url_for('prompt.prompts') }}"         class="mobile-link" data-i18n="explore">Explore Prompts</a>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('favourite.favourites') }}" class="mobile-link" data-i18n="favourites">Favourites</a>
+      <a href="{{ url_for('prompt.personalize') }}"   class="mobile-link" data-i18n="generator">Generator</a>
+      <a href="{{ url_for('profile.profile') }}"      class="mobile-link" data-i18n="profile">Profile</a>
+      <a href="{{ url_for('auth.logout') }}"          class="mobile-link" data-i18n="logout">Logout</a>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}"  class="mobile-link" data-i18n="login">Login</a>
+      <a href="{{ url_for('auth.signup') }}" class="mobile-link" data-i18n="signup">Sign Up</a>
+    {% endif %}
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          <span>{{ message }}</span>
+          <button onclick="this.parentElement.remove()" class="flash-close">✕</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<main class="main-content">{% block content %}{% endblock %}</main>
+
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-brand">
+      <span class="brand-icon">✦</span> PromptLib
+      <p>Your AI Prompt Library for Students &amp; HR Professionals</p>
+    </div>
+    <div class="footer-links">
+      <h4>Quick Links</h4>
+      <a href="{{ url_for('prompt.index') }}"          data-i18n="home">Home</a>
+      <a href="{{ url_for('categories.categories') }}" data-i18n="categories">Categories</a>
+      <a href="{{ url_for('search.search') }}"          data-i18n="search">Search</a>
+      <a href="{{ url_for('prompt.personalize') }}"     data-i18n="generator">Generator</a>
+    </div>
+    <div class="footer-links">
+      <h4>Categories</h4>
+      <a href="{{ url_for('prompt.prompts') }}?subcategory=Student Prompts">Student Prompts</a>
+      <a href="{{ url_for('prompt.prompts') }}?subcategory=Career & HR Prompts">Career &amp; HR</a>
+      <a href="{{ url_for('prompt.prompts') }}?subcategory=Professional Emails">Professional Emails</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2024 PromptLib — Built for Students &amp; HR Professionals</p>
+  </div>
+</footer>
+
+<!-- Guest Limit Modal -->
+<div id="guestLimitModal" class="modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-icon">⚠️</div>
+    <h2>Guest Limit Reached</h2>
+    <p>You have used your 5 free prompt copies. Please login or signup for unlimited access.</p>
+    <div class="modal-actions">
+      <a href="{{ url_for('auth.login') }}"  class="btn btn-primary" data-i18n="login">Login</a>
+      <a href="{{ url_for('auth.signup') }}" class="btn btn-outline" data-i18n="signup">Sign Up Free</a>
+    </div>
+    <button onclick="document.getElementById('guestLimitModal').style.display='none'" class="modal-close">✕</button>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/language_switch.js') }}"></script>
+<script src="{{ url_for('static', filename='js/prompt_actions.js') }}"></script>
+<script>
+  // Mobile menu toggle
+  document.getElementById('mobileMenuBtn').addEventListener('click', function () {
+    document.getElementById('mobileMenu').classList.toggle('open');
+  });
+  // User dropdown toggle
+  const userBtn = document.getElementById('userBtn');
+  const userDropdown = document.getElementById('userDropdown');
+  if (userBtn && userDropdown) {
+    userBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      userDropdown.classList.toggle('open');
+    });
+    document.addEventListener('click', function () {
+      userDropdown.classList.remove('open');
+    });
+  }
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

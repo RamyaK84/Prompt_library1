@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Explore Prompts – PromptLib{% endblock %}
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title" data-i18n="explore">Explore Prompts</h1>
+    <p>Browse all {{ prompts|length }} curated prompts in our library</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="prompts-layout">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-card">
+          <h3>Filter by Category</h3>
+          <a href="{{ url_for('prompt.prompts') }}" class="filter-link {% if not selected_sub %}active{% endif %}">All Prompts</a>
+          {% for sub, cats in categories.items() %}
+            <div class="filter-group">
+              <a href="{{ url_for('prompt.prompts') }}?subcategory={{ sub }}" class="filter-link filter-parent {% if selected_sub == sub %}active{% endif %}">{{ sub }}</a>
+              {% for cat in cats %}
+                <a href="{{ url_for('prompt.prompts') }}?category={{ cat }}" class="filter-link filter-child {% if selected_category == cat %}active{% endif %}">· {{ cat }}</a>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </div>
+        <div class="sidebar-card">
+          <h3>Smart Finder</h3>
+          <p style="font-size:0.85rem;color:#666;margin-bottom:12px">Describe what you need</p>
+          <input type="text" id="sideSmartQ" placeholder="e.g. email to professor..." class="sidebar-input"/>
+          <button class="btn btn-primary btn-full" onclick="doSideSmartSearch()">🔍 Find</button>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <div class="prompts-main">
+        <div class="prompts-toolbar">
+          <span class="results-count">{{ prompts|length }} prompts found</span>
+          <input type="text" id="liveFilter" placeholder="Filter these results..." class="toolbar-search" oninput="filterPrompts(this.value)"/>
+        </div>
+        <div class="prompts-grid" id="promptsGrid">
+          {% for prompt in prompts %}
+          <div class="prompt-card filterable" data-title="{{ prompt.title|lower }}" data-cat="{{ prompt.category|lower }}" data-id="{{ prompt.id }}">
+            <div class="prompt-card-header">
+              <span class="prompt-category-badge">{{ prompt.subcategory }}</span>
+              <button class="fav-btn {% if prompt.id in fav_ids %}fav-active{% endif %}" onclick="toggleFav({{ prompt.id }}, this)">
+                {% if prompt.id in fav_ids %}❤️{% else %}🤍{% endif %}
+              </button>
+            </div>
+            <h3 class="prompt-title">{{ prompt.title }}</h3>
+            <p class="prompt-preview">{{ prompt.preview }}</p>
+            <div class="prompt-tags">
+              {% for tag in prompt.tags[:3] %}
+                <span class="tag">#{{ tag }}</span>
+              {% endfor %}
+            </div>
+            <div class="prompt-meta">
+              <span class="prompt-cat-tag">{{ prompt.category }}</span>
+              <span class="prompt-rating">⭐ {{ prompt.rating }}</span>
+            </div>
+            <div class="prompt-actions">
+              <a href="{{ url_for('prompt.prompt_detail', prompt_id=prompt.id) }}" class="btn btn-sm btn-outline">View</a>
+              <button class="btn btn-sm btn-primary" onclick="copyPrompt({{ prompt.id }}, `{{ prompt.template|replace('`', '\\`') }}`)">
+                <i class="fa fa-copy"></i> Copy
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+          {% if not prompts %}
+            <div class="empty-state">
+              <div class="empty-icon">🔍</div>
+              <h3>No prompts found</h3>
+              <p>Try a different category or search term.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+function filterPrompts(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.filterable').forEach(card => {
+    const match = card.dataset.title.includes(q) || card.dataset.cat.includes(q);
+    card.style.display = match ? '' : 'none';
+  });
+}
+function doSideSmartSearch() {
+  const q = document.getElementById('sideSmartQ').value;
+  if(q) window.location.href = '/search?q=' + encodeURIComponent(q) + '&mode=smart';
+}
+</script>
+{% endblock %}

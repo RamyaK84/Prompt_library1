@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}PromptLib – AI Prompt Library for Students & HR{% endblock %}
+{% block content %}
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge" data-i18n="hero_badge">✦ 25+ Curated Prompts</div>
+    <h1 class="hero-title" data-i18n="hero_title">Discover the Perfect Prompt for Every Need</h1>
+    <p class="hero-subtitle" data-i18n="hero_subtitle">A smart prompt library for students, early-career professionals, and HR teams.</p>
+
+    <div class="hero-search">
+      <div class="search-bar-hero">
+        <i class="fa fa-search search-icon-hero"></i>
+        <input type="text" id="heroSearch"
+               data-i18n-placeholder="hero_search_placeholder"
+               placeholder="Search prompts e.g. 'leave letter', 'resume builder'..."
+               class="hero-search-input"/>
+        <button class="btn btn-primary" onclick="doHeroSearch()" data-i18n="hero_search_btn">Search</button>
+      </div>
+      <div class="hero-tags">
+        <span class="tag-pill" onclick="setSearch('leave letter')"  data-i18n="tag_leave">Leave Letter</span>
+        <span class="tag-pill" onclick="setSearch('resume')"        data-i18n="tag_resume">Resume</span>
+        <span class="tag-pill" onclick="setSearch('interview')"     data-i18n="tag_interview">Interview Prep</span>
+        <span class="tag-pill" onclick="setSearch('internship email')" data-i18n="tag_internship">Internship Email</span>
+        <span class="tag-pill" onclick="setSearch('study plan')"    data-i18n="tag_study">Study Plan</span>
+      </div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">25+</span><span class="stat-label" data-i18n="stat_prompts">Prompts</span></div>
+      <div class="stat"><span class="stat-num">8</span><span class="stat-label"   data-i18n="stat_categories">Categories</span></div>
+      <div class="stat"><span class="stat-num">2</span><span class="stat-label"   data-i18n="stat_languages">Languages</span></div>
+      <div class="stat"><span class="stat-num">Free</span><span class="stat-label" data-i18n="stat_free">Always</span></div>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="floating-card fc1"><span class="fc-icon">📝</span><span>Leave Letter</span></div>
+    <div class="floating-card fc2"><span class="fc-icon">💼</span><span>Resume Builder</span></div>
+    <div class="floating-card fc3"><span class="fc-icon">🎓</span><span>Study Plan</span></div>
+    <div class="floating-card fc4"><span class="fc-icon">📧</span><span>Job Email</span></div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title" data-i18n="browse_categories">Browse Categories</h2>
+        <p class="section-sub" data-i18n="browse_categories_sub">Find prompts organized by your academic or professional needs</p>
+      </div>
+    </div>
+    <div class="category-grid">
+      {% for sub, cats in categories.items() %}
+      <a href="{{ url_for('prompt.prompts') }}?subcategory={{ sub }}" class="category-card">
+        <div class="cat-icon">
+          {% if 'Student' in sub %}🎓{% elif 'Study' in sub %}📚{% elif 'Career' in sub or 'HR' in sub %}💼{% elif 'Email' in sub or 'Professional' in sub %}📧{% else %}✦{% endif %}
+        </div>
+        <h3>{{ sub }}</h3>
+        <p>{{ cats|length }} categories · {{ prompts|selectattr('subcategory','equalto',sub)|list|length }} prompts</p>
+        <div class="cat-arrow">→</div>
+      </a>
+      {% endfor %}
+      <a href="{{ url_for('prompt.personalize') }}" class="category-card category-card-special">
+        <div class="cat-icon">✨</div>
+        <h3 data-i18n="generator_title">✨ Prompt Generator</h3>
+        <p data-i18n="generator_sub">Personalize prompts with your profile data</p>
+        <div class="cat-arrow">→</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED PROMPTS -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title" data-i18n="featured_prompts">Featured Prompts</h2>
+      <a href="{{ url_for('prompt.prompts') }}" class="btn btn-outline" data-i18n="view_all">View All →</a>
+    </div>
+    <div class="prompts-grid">
+      {% for prompt in prompts %}
+      <div class="prompt-card" data-id="{{ prompt.id }}">
+        <div class="prompt-card-header">
+          <span class="prompt-category-badge">{{ prompt.subcategory }}</span>
+          <button class="fav-btn {% if prompt.id in fav_ids %}fav-active{% endif %}"
+                  onclick="toggleFav({{ prompt.id }}, this)">
+            {% if prompt.id in fav_ids %}❤️{% else %}🤍{% endif %}
+          </button>
+        </div>
+        <h3 class="prompt-title">{{ prompt.title }}</h3>
+        <p class="prompt-preview">{{ prompt.preview }}</p>
+        <div class="prompt-meta">
+          <span class="prompt-cat-tag">{{ prompt.category }}</span>
+          <span class="prompt-rating">⭐ {{ prompt.rating }}</span>
+        </div>
+        <div class="prompt-actions">
+          <a href="{{ url_for('prompt.prompt_detail', prompt_id=prompt.id) }}" class="btn btn-sm btn-outline" data-i18n="view_prompt">View Prompt</a>
+          <button class="btn btn-sm btn-primary"
+                  onclick="copyPrompt({{ prompt.id }}, `{{ prompt.template|replace('`','\\`') }}`)">
+            <i class="fa fa-copy"></i> <span data-i18n="copy_btn">Copy</span>
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- SMART FINDER CTA -->
+<section class="section">
+  <div class="container">
+    <div class="smart-finder-cta">
+      <div class="cta-content">
+        <h2 data-i18n="smart_finder_title">🔍 Smart Prompt Finder</h2>
+        <p data-i18n="smart_finder_sub">Describe what you need in plain English. Our AI will find the most relevant prompts.</p>
+        <div class="smart-search-bar">
+          <input type="text" id="smartQuery"
+                 data-i18n-placeholder="smart_finder_placeholder"
+                 placeholder="e.g. email asking professor for leave..."
+                 class="smart-input"/>
+          <button class="btn btn-primary" onclick="doSmartSearch()">
+            <i class="fa fa-magic"></i> <span data-i18n="find_prompts_btn">Find Prompts</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script>
+function doHeroSearch() {
+  const q = document.getElementById('heroSearch').value;
+  if (q) window.location.href = '/search?q=' + encodeURIComponent(q) + '&mode=keyword';
+}
+function setSearch(val) {
+  document.getElementById('heroSearch').value = val;
+  doHeroSearch();
+}
+function doSmartSearch() {
+  const q = document.getElementById('smartQuery').value;
+  if (q) window.location.href = '/search?q=' + encodeURIComponent(q) + '&mode=smart';
+}
+document.getElementById('heroSearch').addEventListener('keypress', function (e) {
+  if (e.key === 'Enter') doHeroSearch();
+});
+</script>
+{% endblock %}

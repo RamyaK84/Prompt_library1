@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Categories – PromptLib{% endblock %}
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title" data-i18n="categories">Browse Categories</h1>
+    <p>Explore all prompt categories organized by topic</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    {% for sub, cats in categories.items() %}
+    <div class="cat-section">
+      <h2 class="cat-section-title">
+        {% if 'Student' in sub %}🎓{% elif 'Study' in sub %}📚{% elif 'Career' in sub or 'HR' in sub %}💼{% elif 'Email' in sub or 'Professional' in sub %}📧{% else %}✦{% endif %}
+        {{ sub }}
+      </h2>
+      <div class="subcats-grid">
+        {% for cat in cats %}
+          {% set cat_prompts = prompts|selectattr('category', 'equalto', cat)|list %}
+          <a href="{{ url_for('prompt.prompts') }}?category={{ cat }}" class="subcat-card">
+            <div class="subcat-header">
+              <h3>{{ cat }}</h3>
+              <span class="subcat-count">{{ cat_prompts|length }}</span>
+            </div>
+            <div class="subcat-preview">
+              {% for p in cat_prompts[:2] %}
+                <div class="subcat-prompt-preview">· {{ p.title }}</div>
+              {% endfor %}
+            </div>
+            <span class="btn btn-sm btn-outline" style="margin-top:10px">Browse →</span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Profile – PromptLib{% endblock %}
+{% block content %}
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title" data-i18n="my_profile">My Profile</h1>
+    <p data-i18n="profile_sub">Your profile data is used to personalize prompts</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="profile-layout">
+      <div class="profile-card">
+        <div class="profile-avatar-large">{{ user.name[0].upper() }}</div>
+        <h2>{{ user.name }}</h2>
+        <span class="role-badge role-{{ user.role }}">{{ user.role|capitalize }}</span>
+        <p class="profile-email">{{ user.email }}</p>
+      </div>
+      <div class="profile-form-card">
+        <h3 data-i18n="edit_profile">Edit Profile</h3>
+        <p class="form-hint" data-i18n="profile_hint">💡 These details will auto-fill your prompts!</p>
+        <form method="POST" class="auth-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="full_name">Full Name</label>
+              <input type="text" name="name" value="{{ user.name }}" class="form-input" required/>
+            </div>
+            <div class="form-group">
+              <label data-i18n="email_label">Email (read-only)</label>
+              <input type="email" value="{{ user.email }}" class="form-input" disabled/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label data-i18n="dept_label">Department</label>
+              <input type="text" name="department" value="{{ user.department or '' }}" placeholder="e.g. Computer Science" class="form-input"/>
+            </div>
+            <div class="form-group">
+              <label data-i18n="year_label">Year of Study</label>
+              <select name="year" class="form-input form-select">
+                <option value="">Select Year</option>
+                {% for y in ['1st Year','2nd Year','3rd Year','4th Year','Postgraduate','PhD'] %}
+                  <option value="{{ y }}" {% if user.year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label data-i18n="college_label">College / University</label>
+            <input type="text" name="college" value="{{ user.college or '' }}" placeholder="e.g. Anna University" class="form-input"/>
+          </div>
+          <button type="submit" class="btn btn-primary" data-i18n="save_profile">Save Profile</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="placeholder-preview">
+      <h3 data-i18n="placeholder_values">🔄 Your Placeholder Values</h3>
+      <p data-i18n="placeholder_sub">These values will replace placeholders in prompts:</p>
+      <div class="placeholder-grid">
+        <div class="placeholder-item"><span class="ph-key">{{name}}</span><span class="ph-arrow">→</span><span class="ph-val">{{ user.name or '(not set)' }}</span></div>
+        <div class="placeholder-item"><span class="ph-key">{{department}}</span><span class="ph-arrow">→</span><span class="ph-val">{{ user.department or '(not set)' }}</span></div>
+        <div class="placeholder-item"><span class="ph-key">{{year}}</span><span class="ph-arrow">→</span><span class="ph-val">{{ user.year or '(not set)' }}</span></div>
+        <div class="placeholder-item"><span class="ph-key">{{college}}</span><span class="ph-arrow">→</span><span class="ph-val">{{ user.college or '(not set)' }}</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

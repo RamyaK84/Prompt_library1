@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Login – PromptLib{% endblock %}
+{% block content %}
+<section class="auth-section">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-logo">✦ PromptLib</div>
+      <h1 class="auth-title" data-i18n="login">Login</h1>
+      <p class="auth-sub" data-i18n="welcome_back">Welcome back! Access unlimited prompts.</p>
+      <form method="POST" class="auth-form">
+        <div class="form-group">
+          <label data-i18n="email_label">Email Address</label>
+          <input type="email" name="email" required placeholder="you@email.com" class="form-input"/>
+        </div>
+        <div class="form-group">
+          <label data-i18n="password_label">Password</label>
+          <div class="input-password">
+            <input type="password" name="password" id="loginPwd" required placeholder="Your password" class="form-input"/>
+            <button type="button" onclick="togglePwd('loginPwd')" class="pwd-toggle">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg" data-i18n="login_btn">Login</button>
+      </form>
+      <div class="auth-divider">or</div>
+      <div class="demo-creds">
+        <p><strong data-i18n="demo_accounts">Demo Accounts:</strong></p>
+        <div class="demo-row" onclick="fillCreds('student@demo.com','student123')">
+          <span>👨‍🎓 Student:</span><span>student@demo.com / student123</span>
+        </div>
+        <div class="demo-row" onclick="fillCreds('admin@demo.com','admin123')">
+          <span>👑 Admin:</span><span>admin@demo.com / admin123</span>
+        </div>
+      </div>
+      <p class="auth-footer">
+        <span data-i18n="no_account">Don't have an account?</span>
+        <a href="{{ url_for('auth.signup') }}" data-i18n="signup">Sign Up</a>
+      </p>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+function togglePwd(id) { const i = document.getElementById(id); i.type = i.type === 'password' ? 'text' : 'password'; }
+function fillCreds(e, p) {
+  document.querySelector('input[name=email]').value = e;
+  document.querySelector('input[name=password]').value = p;
+}
+</script>
+{% endblock %}
